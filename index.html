@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Alfareeda Opticals | Professional POS</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1a2a47; --accent: #d4af37; --danger: #e74c3c; --success: #27ae60; --bg: #f4f7fa; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: none; }
+        .header { background: var(--primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--accent); }
+        .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 20px; max-width: 1400px; margin: auto; }
+        .stat-box { background: white; padding: 20px; border-radius: 12px; border-bottom: 4px solid var(--accent); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .stat-box h4 { margin: 0; color: #636e72; font-size: 0.8rem; text-transform: uppercase; }
+        .stat-box p { font-size: 1.8rem; font-weight: bold; margin: 10px 0; color: var(--primary); }
+        .workspace { display: grid; grid-template-columns: 400px 1fr; gap: 25px; padding: 20px; max-width: 1400px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h3 { border-left: 4px solid var(--accent); padding-left: 10px; color: var(--primary); margin: 0 0 20px 0; font-size: 1.1rem; }
+        label { font-size: 0.7rem; font-weight: bold; color: #b2bec3; display: block; margin-bottom: 5px; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #dfe6e9; border-radius: 8px; box-sizing: border-box; background: #fdfdfd; }
+        .btn { cursor: pointer; border: none; border-radius: 8px; padding: 15px; font-weight: bold; width: 100%; text-transform: uppercase; transition: 0.3s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .manager-only { display: none; }
+        .rx-box { background: #f8f9fa; padding: 10px; border-radius: 8px; display: flex; justify-content: space-around; border: 1px dashed #ccc; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 style="margin:0; font-size:1.4rem;">ALFAREEDA <span style="color:var(--accent)">OPTICALS</span></h1>
+    <div style="display:flex; align-items:center; gap:20px;">
+        <div style="text-align: right;">
+            <div id="roleLabel" style="font-weight:bold; color:var(--accent)">ACCESSING...</div>
+            <div id="clock" style="font-size: 0.8rem; opacity: 0.8;"></div>
+        </div>
+        <button onclick="manualLogout()" style="background:rgba(255,255,255,0.1); border:1px solid var(--accent); color:white; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:0.7rem;">LOGOUT</button>
+    </div>
+</div>
+
+<div class="manager-only">
+    <div style="max-width:1400px; margin: 20px auto 0; padding: 0 20px; display: flex; align-items:center; gap:10px;">
+        <label style="margin:0">Branch Filter:</label>
+        <select id="statFilter" style="width: 200px; margin:0;" onchange="loadStats()">
+            <option value="All">All Branches</option>
+            <option value="Izki">Izki</option>
+            <option value="Sumail">Sumail</option>
+            <option value="Sinaw">Sinaw</option>
+        </select>
+    </div>
+    <div class="stats-container">
+        <div class="stat-box"><h4>Monthly Sales</h4><p id="mSales">0.000</p></div>
+        <div class="stat-box" style="border-color:var(--danger)"><h4>Monthly Expenses</h4><p id="mExp">0.000</p></div>
+        <div class="stat-box" style="border-color:var(--success)"><h4>Net Profit</h4><p id="mProfit">0.000</p></div>
+    </div>
+</div>
+
+<div class="workspace">
+    <div class="sidebar">
+        <div class="card">
+            <h3>New Registration</h3>
+            <label>Store Branch</label>
+            <select id="branch"><option>Izki</option><option>Sumail</option><option>Sinaw</option></select>
+            <label>Invoice Number</label><input type="text" id="inv" placeholder="Manual Entry">
+            <label>Customer Name</label><input type="text" id="name">
+            <label>Phone Number</label><input type="text" id="phone">
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1"><label>RE</label><input type="text" id="re"></div>
+                <div style="flex:1"><label>LE</label><input type="text" id="le"></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1"><label>Total</label><input type="number" id="tot" oninput="math()"></div>
+                <div style="flex:1"><label>Adv.</label><input type="number" id="adv" oninput="math()"></div>
+            </div>
+            <label>Balance Due</label><input type="number" id="bal" readonly style="color:var(--danger); font-weight:bold;">
+            <button class="btn btn-primary" onclick="saveOrder()">Submit Record</button>
+        </div>
+
+        <div class="card" style="border-bottom: 4px solid var(--danger);">
+            <h3>Branch Expense</h3>
+            <label>Description</label><input type="text" id="eDesc">
+            <label>Amount (OMR)</label><input type="number" id="eAmt">
+            <button class="btn btn-danger" onclick="saveExp()">Log Expense</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="card">
+            <h3>Customer History</h3>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="sPh" placeholder="Search by phone..." style="margin:0;">
+                <button class="btn btn-primary" style="width:120px;" onclick="search()">Search</button>
+            </div>
+            <div id="res" style="margin-top:20px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const url = 'https://script.google.com/macros/s/AKfycbxQyfTa9hk_Kp4uF78BiHD8WnsdiUhxl64B40Z9v-2T2zypbHhNGPefKl2PydoYhS3z3Q/exec'; // <--- PUT YOUR DEPLOYMENT URL HERE
+    const key = 'ALF2025';
+    let role = 'cashier';
+
+    window.onload = function() {
+        Swal.fire({
+            title: 'Alfareeda POS Login',
+            input: 'password',
+            inputPlaceholder: 'Enter Password',
+            allowOutsideClick: false
+        }).then((r) => {
+            if (r.value === 'manager786') {
+                role = 'manager';
+                document.querySelectorAll('.manager-only').forEach(e => e.style.display = 'block');
+                document.getElementById('roleLabel').innerText = 'MANAGER MODE';
+                loadStats();
+            } else if (r.value === 'cashier123') {
+                document.getElementById('roleLabel').innerText = 'CASHIER MODE';
+            } else {
+                location.reload();
+            }
+            document.body.style.display = 'block';
+        });
+    };
+
+    function loadStats() {
+        let b = document.getElementById('statFilter').value;
+        fetch(`${url}?action=getStats&key=${key}&branch=${b}`)
+        .then(res => res.json()).then(d => {
+            document.getElementById('mSales').innerText = d.sales.toFixed(3);
+            document.getElementById('mExp').innerText = d.expenses.toFixed(3);
+            document.getElementById('mProfit').innerText = (d.sales - d.expenses).toFixed(3);
+        });
+    }
+
+    function math() {
+        let t = parseFloat(document.getElementById('tot').value) || 0;
+        let a = parseFloat(document.getElementById('adv').value) || 0;
+        document.getElementById('bal').value = (t - a).toFixed(3);
+    }
+
+    function saveOrder() {
+        let n = document.getElementById('name').value;
+        let b = document.getElementById('branch').value;
+        if(!n) return Swal.fire("Error", "Name required", "error");
+        let p = `action=saveSale&key=${key}&branch=${b}&inv=${document.getElementById('inv').value}&name=${encodeURIComponent(n)}&phone=${document.getElementById('phone').value}&re=${document.getElementById('re').value}&le=${document.getElementById('le').value}&total=${document.getElementById('tot').value}&advance=${document.getElementById('adv').value}&balance=${document.getElementById('bal').value}`;
+        Swal.fire({title: 'Saving...', didOpen: () => Swal.showLoading()});
+        fetch(`${url}?${p}`).then(() => Swal.fire("Success", "Saved to " + b, "success").then(() => location.reload()));
+    }
+
+    function saveExp() {
+        let a = document.getElementById('eAmt').value;
+        let b = document.getElementById('branch').value;
+        if(!a) return Swal.fire("Error", "Amount required", "error");
+        let p = `action=saveExpense&key=${key}&branch=${b}&amount=${a}&desc=${encodeURIComponent(document.getElementById('eDesc').value)}`;
+        fetch(`${url}?${p}`).then(() => Swal.fire("Expense Logged", b, "success").then(() => location.reload()));
+    }
+
+    function search() {
+        fetch(`${url}?key=${key}&phone=${document.getElementById('sPh').value}`).then(r => r.json()).then(data => {
+            let h = '';
+            data.forEach(r => {
+                h += `<div class="card">
+                    <div style="display:flex; justify-content:space-between"><strong>${r.name}</strong><small>${r.branch}</small></div>
+                    <div class="rx-box"><div><small>RE</small><br>${r.re}</div><div><small>LE</small><br>${r.le}</div></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--danger); font-weight:bold;">BAL: OMR ${parseFloat(r.balance).toFixed(3)}</span>
+                        <span style="background:#eee; padding:3px 8px; border-radius:5px; font-size:0.7rem;">${r.status}</span>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('res').innerHTML = h || "No record found";
+        });
+    }
+
+  // --- INACTIVITY & LOGOUT LOGIC ---
+let idleTimer;
+
+function resetTimer() {
+    clearTimeout(idleTimer);
+    // 1800000 milliseconds = 30 Minutes
+    idleTimer = setTimeout(logout, 1800000); 
+}
+
+// Events that will reset the 30-minute clock
+window.onmousemove = resetTimer;
+window.onmousedown = resetTimer;
+window.ontouchstart = resetTimer;
+window.onclick = resetTimer;
+window.onkeypress = resetTimer;
+
+function logout() {
+    Swal.fire({
+        title: 'Session Expired',
+        text: 'You have been logged out due to inactivity.',
+        icon: 'info',
+        timer: 3000,
+        showConfirmButton: false
+    }).then(() => {
+        // Refresh page to lock everything
+        location.reload(); 
+    });
+}
+
+function manualLogout() {
+    Swal.fire({
+        title: 'Logging out...',
+        timer: 1000,
+        didOpen: () => { Swal.showLoading() }
+    }).then(() => {
+        location.reload();
+    });
+}
+</script>
+</body>
+</html>
